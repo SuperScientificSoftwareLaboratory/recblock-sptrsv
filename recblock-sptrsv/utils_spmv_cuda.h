@@ -102,6 +102,25 @@ __global__ void spmv_threadsca_dcsr_cuda_executor(const int *d_csrRowPtr,
         }
         d_y[d_row_perm[rowid]] = sum;
     }
+
+    // const int global_id = blockIdx.x * blockDim.x + threadIdx.x;
+    // if (!global_id)
+    // {
+    //     for (int i = 0; i < m; i++)
+    //     {
+    //         const int rowid = i;
+    //         const int start = d_csrRowPtr[rowid] - d_csrRowPtr[0];
+    //         const int stop = d_csrRowPtr[rowid + 1] - d_csrRowPtr[0];
+    //         VALUE_TYPE sum = 0;
+    //         if (stop - start <= LONGROW_THRESHOLD)
+    //         {
+    //             for (int j = start; j < stop; j++)
+    //                 sum += d_x[d_csrColIdx[j]] * d_csrVal[j];
+    //         }
+    //         d_y[d_row_perm[rowid]] = sum;
+    //         printf("id = %d  sum = %.1lf\n", d_row_perm[rowid], sum);
+    //     }
+    // }
 }
 
 __global__ void spmv_warpvec_csr_cuda_executor(const int *d_csrRowPtr,

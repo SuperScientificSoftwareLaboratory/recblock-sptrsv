@@ -24,8 +24,16 @@ void matrix_transposition(const int m,
     // prefix-sum scan to get the column pointer
     exclusive_scan(cscColPtr, n + 1);
 
+    // for (int i = 0; i < m + 1; i++)
+    //     printf("%d ", cscColPtr[i]);
+    // printf("\n\n");
+
     int *cscColIncr = (int *)malloc(sizeof(int) * (n + 1));
     memcpy(cscColIncr, cscColPtr, sizeof(int) * (n + 1));
+
+    // for (int i = 0; i < n + 1; i++)
+    //     printf("%d ", cscColIncr[i]);
+    // printf("\n\n");
 
     // insert nnz to csc
     for (int row = 0; row < m; row++)
@@ -35,9 +43,11 @@ void matrix_transposition(const int m,
             int col = csrColIdx[j];
 
             cscRowIdx[cscColIncr[col]] = row;
+            // printf("%d ", cscRowIdx[cscColIncr[col]]);
             cscVal[cscColIncr[col]] = csrVal[j];
             cscColIncr[col]++;
         }
+        // printf("\n\n");
     }
 
     free(cscColIncr);

@@ -56,44 +56,6 @@ int choose_pivot(int i, int j)
 }
 
 template <typename iT, typename vT>
-__inline__ __device__ void quicksort_keyval_cuda(iT *key, vT *val, int start, int end)
-{
-    iT pivot;
-    int i, j, k;
-
-    if (start < end)
-    {
-        k = choose_pivot(start, end);
-        swap<iT>(&key[start], &key[k]);
-        swap<vT>(&val[start], &val[k]);
-        pivot = key[start];
-
-        i = start + 1;
-        j = end;
-        while (i <= j)
-        {
-            while ((i <= end) && (key[i] <= pivot))
-                i++;
-            while ((j >= start) && (key[j] > pivot))
-                j--;
-            if (i < j)
-            {
-                swap<iT>(&key[i], &key[j]);
-                swap<vT>(&val[i], &val[j]);
-            }
-        }
-
-        // swap two elements
-        swap<iT>(&key[start], &key[j]);
-        swap<vT>(&val[start], &val[j]);
-
-        // recursively sort the lesser key
-        quicksort_keyval_cuda<iT, vT>(key, val, start, j - 1);
-        quicksort_keyval_cuda<iT, vT>(key, val, j + 1, end);
-    }
-}
-
-template <typename iT, typename vT>
 void quicksort_keyval(iT *key, vT *val, int start, int end)
 {
     iT pivot;

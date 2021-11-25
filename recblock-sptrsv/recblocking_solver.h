@@ -24,7 +24,8 @@ void recblocking_solver(int *cscColPtr,
                         VALUE_TYPE *x_ref,
                         int rhs,
                         int lv,
-                        int substitution)
+                        int substitution,
+                        double *cal_time)
 {
     int tri_block = pow(2, lv);
     int squ_block = tri_block - 1;
@@ -67,6 +68,9 @@ void recblocking_solver(int *cscColPtr,
 
     if (substitution == SUBSTITUTION_FORWARD)
     {
+        struct timeval t1, t2;
+        gettimeofday(&t1, NULL);
+        
         int *cscColPtrTR_new = (int *)malloc((n + 1) * sizeof(int));
         int *cscRowIdxTR_new = (int *)malloc(nnz * sizeof(int));
         VALUE_TYPE *cscValTR_new = (VALUE_TYPE *)malloc(nnz * sizeof(VALUE_TYPE));
@@ -75,6 +79,7 @@ void recblocking_solver(int *cscColPtr,
                           nnz, m, n, levelItem, substitution, lv, loc_off, tmp_off, blk_m, blk_n, blk_nnz,
                           subtri_upbound, subtri_downbound, subrec_upbound, subrec_downbound, subrec_rightbound,
                           subrec_leftbound, &ptr_size, &idx_size, &dcsr_size);
+
 
         recblock_Ptr = (int *)malloc(sizeof(int) * ptr_size);
         recblock_Ptr[0] = 0;
@@ -110,6 +115,14 @@ void recblocking_solver(int *cscColPtr,
         cudaMemcpy(d_recblock_dcsr_rowidx, recblock_dcsr_rowidx, dcsr_size * sizeof(int), cudaMemcpyHostToDevice);
         cudaMemcpy(d_recblock_Val, recblock_Val, idx_size * sizeof(double), cudaMemcpyHostToDevice);
 
+        // for (int i = 0; i < ptr_size; i++)
+        //     printf("%d ", recblock_Ptr[i]);
+        // printf("\n\n");
+        
+        // for (int i = 0; i < nnz; i++)
+        //     printf("%d ", recblock_Index[i]);
+        // printf("\n\n");
+        
         free(recblock_Ptr);
         free(recblock_Index);
         free(recblock_dcsr_rowidx);
@@ -117,6 +130,9 @@ void recblocking_solver(int *cscColPtr,
 
         VALUE_TYPE *b_perm = (VALUE_TYPE *)malloc(sizeof(VALUE_TYPE) * m * rhs);
         levelset_reordering_vecb(b, b_perm, levelItem, m);
+        VALUE_TYPE *b_perm_d;
+        cudaMalloc((void **)&b_perm_d, rhs * m * sizeof(VALUE_TYPE));
+        cudaMemcpy(b_perm_d, b_perm, sizeof(VALUE_TYPE) * m * rhs, cudaMemcpyHostToDevice);
 
         VALUE_TYPE *x_d;
         cudaMalloc((void **)&x_d, rhs * n * sizeof(VALUE_TYPE));
@@ -125,8 +141,8 @@ void recblocking_solver(int *cscColPtr,
         cudaMalloc((void **)&b_d, rhs * m * sizeof(VALUE_TYPE));
 
         L_calculate(mv_blk, trsv_blk, sum_block, blk_m, blk_n, loc_off, tmp_off,
-                    m, rhs, x_d, b_d, b_perm, d_recblock_Ptr, d_recblock_Index, d_recblock_dcsr_rowidx,
-                    d_recblock_Val, ptr_offset, index_offset, dcsrindex_offset);
+                    m, rhs, x_d, b_d, b_perm_d, d_recblock_Ptr, d_recblock_Index, d_recblock_dcsr_rowidx,
+                    d_recblock_Val, ptr_offset, index_offset, dcsrindex_offset, cal_time);
 
         VALUE_TYPE *x_perm = (VALUE_TYPE *)malloc(sizeof(VALUE_TYPE) * n * rhs);
         cudaMemcpy(x_perm, x_d, rhs * n * sizeof(VALUE_TYPE), cudaMemcpyDeviceToHost);
@@ -143,6 +159,14 @@ void recblocking_solver(int *cscColPtr,
         cudaFree(d_recblock_Index);
         cudaFree(d_recblock_dcsr_rowidx);
         cudaFree(d_recblock_Val);
+
+        // gettimeofday(&t2, NULL);
+        // double preprocess_time = (t2.tv_sec - t1.tv_sec) * 1000.0 + (t2.tv_usec - t1.tv_usec) / 1000.0;
+        // printf("preprocess time = %.3lf ms\n", preprocess_time);
+
+        // FILE *fouttime = fopen("recblocking_211122.csv", "a");
+        // fprintf(fouttime, "%i, %f, %f, %f, %f, %f, %f, %f, %i", );
+        // fclose(fouttime);
     }
     else if (substitution == SUBSTITUTION_BACKWARD)
     {
@@ -204,8 +228,8 @@ void recblocking_solver(int *cscColPtr,
         cudaMalloc((void **)&b_d, rhs * m * sizeof(VALUE_TYPE));
 
         U_calculate(mv_blk, trsv_blk, sum_block, blk_m, blk_n, loc_off, tmp_off,
-                    m, rhs, x_d, b_d, b_perm, d_recblock_Ptr, d_recblock_Index, d_recblock_dcsr_rowidx,
-                    d_recblock_Val, ptr_offset, index_offset, dcsrindex_offset);
+                    m, nnz, rhs, x_d, b_d, b_perm, d_recblock_Ptr, d_recblock_Index, d_recblock_dcsr_rowidx,
+                    d_recblock_Val, ptr_offset, index_offset, dcsrindex_offset, cal_time);
 
         VALUE_TYPE *x_perm = (VALUE_TYPE *)malloc(sizeof(VALUE_TYPE) * n * rhs);
         cudaMemcpy(x_perm, x_d, rhs * n * sizeof(VALUE_TYPE), cudaMemcpyDeviceToHost);

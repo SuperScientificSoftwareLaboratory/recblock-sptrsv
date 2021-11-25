@@ -5,6 +5,7 @@
 #include "mmio.h"
 #include "mmio_highlevel.h"
 #include "recblocking_solver.h"
+#include "recblocking_solver_cuda.h"
 
 // "Usage: ``./sptrsv-double -d 0 -rhs 1 -lv -1 -forward/-backward -mtx A.mtx'' for Ax=b on device 0"
 int main(int argc,  char ** argv)
@@ -240,7 +241,7 @@ int main(int argc,  char ** argv)
     free(csrRowPtrTR);
     free(csrColIdxTR);
     free(csrValTR);
-    
+        
     if (lv == -1)
     {
         int li = 1;
@@ -251,15 +252,49 @@ int main(int argc,  char ** argv)
         }
         lv = li;
     }
-    recblocking_solver(cscColPtrTR, cscRowIdxTR, cscValTR, m, n, nnzTR, 
-                       b, x, x_ref, rhs, lv, substitution);
     
+    int *d_cscColPtrTR;
+    int *d_cscRowIdxTR;
+    VALUE_TYPE *d_cscValTR;
+    cudaMalloc((void **)&d_cscColPtrTR, (n + 1) * sizeof(int));
+    cudaMalloc((void **)&d_cscRowIdxTR, nnzTR * sizeof(int));
+    cudaMalloc((void **)&d_cscValTR, nnzTR * sizeof(VALUE_TYPE));
+    
+    cudaMemcpy(d_cscColPtrTR, cscColPtrTR, sizeof(int) * (n + 1), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cscRowIdxTR, cscRowIdxTR, sizeof(int) * nnzTR, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cscValTR, cscValTR, sizeof(VALUE_TYPE) * nnzTR, cudaMemcpyHostToDevice);
+
+
+    VALUE_TYPE *d_x;
+    VALUE_TYPE *d_b;
+    cudaMalloc((void **)&d_x, m * sizeof(VALUE_TYPE));
+    cudaMalloc((void **)&d_b, m * sizeof(VALUE_TYPE));
+    
+    cudaMemcpy(d_x, x, sizeof(VALUE_TYPE) * m, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_b, b, sizeof(VALUE_TYPE) * m, cudaMemcpyHostToDevice);
+    
+    double cal_time = 0;
+    double preprocess_time = 0;
+    recblocking_solver_cuda(d_cscColPtrTR, d_cscRowIdxTR, d_cscValTR,
+                            m, n, nnzTR, d_x, d_b, substitution, lv, &cal_time, &preprocess_time);
+    cudaMemcpy(x, d_x, sizeof(VALUE_TYPE) * m, cudaMemcpyDeviceToHost);
+    
+    printf("computation usetime = %.3lf ms\n", cal_time);
+    printf("Performance = %.3lf gflops\n", (2 * nnzTR) / (cal_time * 1e6));
+
+    cudaFree(d_cscColPtrTR);
+    cudaFree(d_cscRowIdxTR);
+    cudaFree(d_cscValTR);
+    cudaFree(d_b);
+    cudaFree(d_x);
     free(cscColPtrTR);
     free(cscRowIdxTR);
     free(cscValTR);
     free(b);
-
+    
+    
     // validate x
+    int flag = 0;
     double accuracy = 1e-4;
     double ref = 0.0;
     double res = 0.0;
@@ -276,10 +311,13 @@ int main(int argc,  char ** argv)
     if (res < accuracy && (res >= 0))
     {
         printf("x check passed! |x-xref|/|xref| = %8.2e\n", res);
+        flag = 1;
     }
     else
         printf(" x check _NOT_ passed! |x-xref|/|xref| = %8.2e\n", res);
 
     free(x);
     free(x_ref);
+    
+    return 0;
 }

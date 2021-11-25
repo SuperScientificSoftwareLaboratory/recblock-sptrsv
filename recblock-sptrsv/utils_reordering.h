@@ -117,6 +117,10 @@ void levelset_reordering_colrow_csc(const int *cscColPtrTR,
     // transpose from csc to csr
     matrix_transposition_litelite(m, n, nnzTR,
                                   cscColPtrTR, cscRowIdxTR, csrRowPtrTR);
+    
+    // for (int i = 0; i < m + 1; i++)
+    //     printf("%d ", csrRowPtrTR[i]);
+    // printf("\n");
 
     int *levelPtr = (int *)malloc((m + 1) * sizeof(int));
 
@@ -134,7 +138,17 @@ void levelset_reordering_colrow_csc(const int *cscColPtrTR,
         for (int i = m - 1; i >= 0; i--)
             levelperm[i] = i;
 
+    // printf("perm ori:\n");
+    // for (int i = 0; i < m; i++)
+    //     printf("%d ", levelItem_tmp[i]);
+    // printf("\n");
+
     quicksort_keyval<int, int>(levelItem_tmp, levelperm, 0, m - 1);
+    
+    // printf("perm:\n");
+    // for (int i = 0; i < m; i++)
+    //     printf("%d ", levelperm[i]);
+    // printf("\n");
 
     if (substitution == SUBSTITUTION_BACKWARD)
     {
@@ -143,6 +157,10 @@ void levelset_reordering_colrow_csc(const int *cscColPtrTR,
             levelperm[levelItem[i]] = m - i - 1;
         }
     }
+
+    // for (int i = 0; i < m; i++)
+    //     printf("%d ", levelItem[i]);
+    // printf("\n");
 
     // reorder columns
     cscColPtrTR_new[0] = 0;
@@ -177,6 +195,11 @@ void levelset_reordering_colrow_csc(const int *cscColPtrTR,
         }
         memcpy(levelItem, levelItem_tmp, sizeof(int) * m);
     }
+
+    // for (int i = 0; i < nnzTR; i++)
+    //     printf("%d ", cscRowIdxTR_new[i]);
+    // printf("\n\n");
+
 
     free(csrRowPtrTR);
     free(levelPtr);

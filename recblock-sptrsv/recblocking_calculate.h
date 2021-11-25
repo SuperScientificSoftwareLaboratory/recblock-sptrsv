@@ -30,18 +30,18 @@ void L_calculate(SpMV_block *mv_blk,
                  const double *d_recblock_Val,
                  int *ptr_offset,
                  int *index_offset,
-                 int *dcsrindex_offset)
+                 int *dcsrindex_offset,
+                 double *cal_time)
 {
     struct timeval t1, t2;
-    double total_cal_time = 0;
     for (int re = 0; re < BENCH_REPEAT; re++)
     {
-        cudaMemcpy(b_t, b_perm, rhs * m * sizeof(VALUE_TYPE), cudaMemcpyHostToDevice);
+        cudaMemcpy(b_t, b_perm, rhs * m * sizeof(VALUE_TYPE), cudaMemcpyDeviceToDevice);
+
         int b_offset = 0;
         int x_offset = 0;
         int tri_index = 0;
         int squ_index = 0;
-
         gettimeofday(&t1, NULL);
         for (int i = 0; i < sum_block; i++)
         {
@@ -123,6 +123,7 @@ void L_calculate(SpMV_block *mv_blk,
                 {
                     spmv_threadsca_dcsr_cuda_executor<<<mv_blk[squ_index].num_blocks, mv_blk[squ_index].num_threads>>>(&d_recblock_Ptr[ptr_offset[i] - 1], &d_recblock_Index[index_offset[i]], &d_recblock_Val[index_offset[i]],
                                                                                                                        mv_blk[squ_index].m_new, &x_t[loc_off[i]], mv_blk[squ_index].d_y, &d_recblock_dcsr_rowidx[dcsrindex_offset[i]]);
+
                     if (mv_blk[squ_index].longrow != 0)
                         spmv_longrow_csr_cuda_executor<<<mv_blk[squ_index].num_blocks_l, mv_blk[squ_index].num_threads_l>>>(mv_blk[squ_index].d_csrRowPtr_l, mv_blk[squ_index].d_csrColIdx_l, mv_blk[squ_index].d_csrVal_l,
                                                                                                                             &x_t[loc_off[i]], mv_blk[squ_index].d_y, mv_blk[squ_index].longrow, mv_blk[squ_index].d_longrow_idx);
@@ -159,11 +160,11 @@ void L_calculate(SpMV_block *mv_blk,
                 cudaDeviceSynchronize();
             }
         }
+        cudaDeviceSynchronize();
         gettimeofday(&t2, NULL);
-        total_cal_time += (t2.tv_sec - t1.tv_sec) * 1000.0 + (t2.tv_usec - t1.tv_usec) / 1000.0;
-        cudaMemcpy(b_t, b_perm, rhs * m * sizeof(VALUE_TYPE), cudaMemcpyHostToDevice);
+        *cal_time += (t2.tv_sec - t1.tv_sec) * 1000.0 + (t2.tv_usec - t1.tv_usec) / 1000.0;
     }
-    printf("L SpTRSV calculate usetime = %.3lf\n", total_cal_time / BENCH_REPEAT);
+    *cal_time /= BENCH_REPEAT;
 }
 
 void U_calculate(SpMV_block *mv_blk,
@@ -174,6 +175,7 @@ void U_calculate(SpMV_block *mv_blk,
                  int *loc_off,
                  int *tmp_off,
                  int m,
+                 int nnzTR,
                  int rhs,
                  VALUE_TYPE *x_t,
                  VALUE_TYPE *b_t,
@@ -184,13 +186,14 @@ void U_calculate(SpMV_block *mv_blk,
                  const double *d_recblock_Val,
                  int *ptr_offset,
                  int *index_offset,
-                 int *dcsrindex_offset)
+                 int *dcsrindex_offset,
+                 double *cal_time)
 {
     struct timeval t1, t2;
     double total_cal_time = 0;
     for (int re = 0; re < BENCH_REPEAT; re++)
     {
-        cudaMemcpy(b_t, b_perm, rhs * m * sizeof(VALUE_TYPE), cudaMemcpyHostToDevice);
+        cudaMemcpy(b_t, b_perm, rhs * m * sizeof(VALUE_TYPE), cudaMemcpyDeviceToDevice);
         int b_offset = m;
         int x_offset = m;
         int tri_index = 0;
@@ -314,11 +317,11 @@ void U_calculate(SpMV_block *mv_blk,
                 cudaDeviceSynchronize();
             }
         }
+        cudaDeviceSynchronize();
         gettimeofday(&t2, NULL);
-        total_cal_time += (t2.tv_sec - t1.tv_sec) * 1000.0 + (t2.tv_usec - t1.tv_usec) / 1000.0;
-        cudaMemcpy(b_t, b_perm, rhs * m * sizeof(VALUE_TYPE), cudaMemcpyHostToDevice);
+        *cal_time += (t2.tv_sec - t1.tv_sec) * 1000.0 + (t2.tv_usec - t1.tv_usec) / 1000.0;
     }
-    printf("U SpTRSV calculate usetime = %.3lf\n", total_cal_time / BENCH_REPEAT);
+    *cal_time /= BENCH_REPEAT;
 }
 
 void device_memfree(SpMV_block *mv_blk,

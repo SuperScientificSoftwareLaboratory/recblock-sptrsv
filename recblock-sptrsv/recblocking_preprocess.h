@@ -74,6 +74,12 @@ void mat_preprocessing(const int *cscColPtrTR,
                 subtri_upbound[i] = tri_up;
                 subtri_downbound[i] = tri_down;
 
+                // printf("here:\n");
+                // for (int i = 0; i < 108; i++)
+                //     printf("%d ", cscRowIdxTR[i]);
+                // printf("\n\n");
+                // printf("tri_up = %d     tri_down = %d\n", tri_up, tri_down);
+
                 int tri_nnz = 0;
                 int flag = 0;
                 for (int j = tri_up; j < tri_down; j++)
@@ -173,7 +179,6 @@ void mat_preprocessing(const int *cscColPtrTR,
     else
     {
         int tri_up = m - step_size;
-        ;
         int tri_down = m;
         int rec_up;
         int rec_down;
@@ -317,6 +322,15 @@ void get_recblock_size(int *cscRowIdxTR,
                        int *idx_size,
                        int *dcsr_size)
 {
+
+    // for (int i = 0; i < n + 1; i++)
+    //     printf("%d ", cscColPtrTR[i]);
+    // printf("\n\n");
+
+    // for (int i = 0; i < nnzTR; i++)
+    //     printf("%d ", cscRowIdxTR[i]);
+    // printf("\n\n");
+    
     // reorder input CSC according to level-set order
     levelset_reordering_colrow_csc(cscColPtrTR, cscRowIdxTR, cscValTR,
                                    cscColPtrTR_new, cscRowIdxTR_new, cscValTR_new,
@@ -332,6 +346,26 @@ void get_recblock_size(int *cscRowIdxTR,
     mat_preprocessing(cscColPtrTR_new, cscRowIdxTR_new, cscValTR_new, m, n,
                       nlevel, loc_off, tmp_off, blk_m, blk_n, blk_nnz, subtri_upbound,
                       subtri_downbound, subrec_upbound, subrec_downbound, subrec_rightbound, subrec_leftbound, substitution);
+
+    // for (int i = 0; i < n + 1; i++)
+    //     printf("%d ", cscColPtrTR_new[i]);
+    // printf("\n\n");
+
+    // for (int i = 0; i < nnzTR; i++)
+    //     printf("%d ", cscRowIdxTR_new[i]);
+    // printf("\n\n");
+
+    // for (int i = 0; i < sum_block; i++)
+    //     printf("nnz real = %d\n", blk_nnz[i]);
+    // printf("\n");
+
+    // for (int i = 0; i < sum_block; i++)
+    // {
+    //     if (i % 2 == 0)
+    //         printf("up = %d         down = %d\n", subtri_upbound[i], subtri_downbound[i]);
+    //     else    
+    //         printf("up = %d         down = %d       left = %d       right = %d\n", subrec_upbound[i], subrec_downbound[i], subrec_leftbound[i], subrec_rightbound[i]);
+    // }
 
     for (int i = 0; i < sum_block; i++)
     {
@@ -416,6 +450,10 @@ void L_preprocessing(int *cscRowIdxTR_new,
                 cscColPtrTR_sub[i - subtri_upbound[blk_count] + 1] = nnz_ptr;
             }
 
+            // for (int i = 0; i < blk_nnz[blk_count]; i++)
+            //     printf("%d ", cscRowIdxTR_sub[i]);
+            // printf("\n\n");
+
             int *csrRowPtrTR_sub = (int *)malloc(sizeof(int) * (blk_m[blk_count] + 1));
             csrRowPtrTR_sub[0] = 0;
             int *csrColIdxTR_sub = (int *)malloc(sizeof(int) * blk_nnz[blk_count]);
@@ -424,10 +462,19 @@ void L_preprocessing(int *cscRowIdxTR_new,
                                  cscColPtrTR_sub, cscRowIdxTR_sub, cscValTR_sub,
                                  csrColIdxTR_sub, csrRowPtrTR_sub, csrValTR_sub);
 
+            // for (int i = 0; i < blk_nnz[blk_count]; i++)
+            //     printf("%d ", cscRowIdxTR_sub[i]);
+            // printf("\n\n");
+
             int nlv = 0;
             int *levelItem_local = (int *)malloc(blk_m[blk_count] * sizeof(int));
             int *levelPtr_local = (int *)malloc((blk_m[blk_count] + 1) * sizeof(int));
             int fasttrack = blk_m[blk_count] == blk_nnz[blk_count] ? 1 : 0;
+
+            // for (int i = 0; i < blk_nnz[blk_count]+1; i++)
+            //     printf("%d ", csrColIdxTR_sub[i]);
+            // printf("\n\n");
+            
             if (fasttrack)
                 nlv = 1;
             else
@@ -435,9 +482,11 @@ void L_preprocessing(int *cscRowIdxTR_new,
                 findlevel(cscColPtrTR_sub, cscRowIdxTR_sub, csrRowPtrTR_sub, blk_m[blk_count],
                           &nlv, levelPtr_local, levelItem_local);
             }
-
+            // fasttrack = 1;
+            // nlv = 30000;
             if (fasttrack)
             {
+                printf("trsv method = 0\n");
                 int num_threads = WARP_PER_BLOCK * WARP_SIZE;
                 int num_blocks = ceil((double)blk_m[blk_count] / (double)num_threads);
                 ((trsv_blk[trsv_count])).method = 0;
@@ -457,12 +506,18 @@ void L_preprocessing(int *cscRowIdxTR_new,
                     int index = ptr_offset[blk_count] + i;
                     recblock_Ptr[index] = recblock_Ptr[index - 1] + cscColPtrTR_sub[i + 1] - cscColPtrTR_sub[i];
                 }
+                // printf("here\n");
+                // for (int i = 0; i < blk_nnz[blk_count]; i++)
+                //     printf("%d ", recblock_Index[index_offset[blk_count] + i]);
+                // printf("\n");
             }
             else
             {
                 int nnzr = blk_nnz[blk_count] / blk_m[blk_count];
+                // printf("nnzr = %d       nlv = %d\n", nnzr, nlv);
                 if (nlv > 20000)
                 {
+                    printf("trsv method = 1\n");
                     int *d_csrRowPtrTR = NULL;
                     int *d_csrColIdxTR = NULL;
                     VALUE_TYPE *d_csrValTR = NULL;
@@ -560,9 +615,16 @@ void L_preprocessing(int *cscRowIdxTR_new,
                         recblock_Ptr[index + 1] = nnz_ptr;
                     }
                     cu_flag = 1;
+                    
+                    // printf("here\n");
+                    // for (int i = 0; i < blk_nnz[blk_count]; i++)
+                    //     printf("%d ", recblock_Index[index_offset[blk_count] + i]);
+                    // printf("\n");
                 }
                 else if ((nnzr <= 15 && nlv <= 20) || (nnzr == 1 && nlv <= 100))
                 {
+                    printf("trsv method = 2\n");
+                    // printf("YYY\n");
                     (trsv_blk[trsv_count]).method = 2;
                     (trsv_blk[trsv_count]).m = blk_m[blk_count];
                     (trsv_blk[trsv_count]).substitution = substitution;
@@ -582,6 +644,11 @@ void L_preprocessing(int *cscRowIdxTR_new,
                         (trsv_blk[trsv_count]).nnz_lv_array[li] = nnz_lv;
                     }
 
+                    // printf("here:\n");
+                    // for (int i = 0; i < nlv; i++)
+                    //     printf("%d ", (trsv_blk[trsv_count]).nnz_lv_array[i]);
+                    // printf("\n");
+
                     for (int i = 0; i < blk_m[blk_count]; i++)
                     {
                         for (int j = csrRowPtrTR_sub[i]; j < csrRowPtrTR_sub[i + 1]; j++)
@@ -596,6 +663,7 @@ void L_preprocessing(int *cscRowIdxTR_new,
                 }
                 else
                 {
+                    printf("trsv method = 3\n");
                     int *d_cscRowIdxTR;
                     cudaMalloc((void **)&d_cscRowIdxTR, blk_nnz[blk_count] * sizeof(int));
                     cudaMemcpy(d_cscRowIdxTR, cscRowIdxTR_sub, blk_nnz[blk_count] * sizeof(int), cudaMemcpyHostToDevice);
@@ -625,6 +693,8 @@ void L_preprocessing(int *cscRowIdxTR_new,
                     (trsv_blk[trsv_count]).m = blk_m[blk_count];
                     (trsv_blk[trsv_count]).substitution = substitution;
 
+                    // printf("offset = %d     n = %d\n", ptr_offset[blk_count], blk_n[blk_count]);
+                    
                     for (int i = 0; i < blk_n[blk_count]; i++)
                     {
                         for (int j = cscColPtrTR_sub[i]; j < cscColPtrTR_sub[i + 1]; j++)
@@ -639,9 +709,20 @@ void L_preprocessing(int *cscRowIdxTR_new,
                 }
             }
 
+            // for (int i = 0; i < blk_nnz[blk_count]; i++)
+            //     printf("%d ", recblock_Index[index_offset[blk_count]+i]);
+            // printf("\n\n");
+
+            // for (int i = 0; i < blk_nnz[blk_count]; i++)
+            //     printf("%d ", recblock_Index[index_offset[blk_count]+i]);
+            // printf("\n\n");
+
             free(levelPtr_local);
             free(levelItem_local);
 
+                // printf("ptr offset = %d\n", ptr_offset[blk_count]);
+                // printf("idx offset = %d\n", index_offset[blk_count]);
+                
             if (cu_flag == 0)
                 ptr_offset[blk_count + 1] = ptr_offset[blk_count] + blk_m[blk_count];
             else
@@ -658,6 +739,8 @@ void L_preprocessing(int *cscRowIdxTR_new,
             free(cscValTR_sub);
 
             trsv_count++;
+
+
 
             cudaDeviceSynchronize();
         }
@@ -692,15 +775,27 @@ void L_preprocessing(int *cscRowIdxTR_new,
                                  cscColPtr_sqr, cscRowIdx_sqr, cscVal_sqr,
                                  csrColIdx_sqr, csrRowPtr_sqr, csrVal_sqr);
 
+            // for (int i = 0; i < blk_n[blk_count]; i++)
+            //     printf("%d ", csrRowPtr_sqr[i]);
+            // printf("\n\n");
+            
+            // printf("rec real = %d\n", recblock_nnz_ptr);
             for (int i = 0; i < blk_m[blk_count]; i++)
             {
+                // printf("%d ", recblock_nnz_ptr);
                 for (int j = csrRowPtr_sqr[i]; j < csrRowPtr_sqr[i + 1]; j++)
                 {
                     recblock_Index[recblock_nnz_ptr] = csrColIdx_sqr[j];
+                    // printf("%d ", recblock_Index[recblock_nnz_ptr]);
                     recblock_Val[recblock_nnz_ptr] = csrVal_sqr[j];
                     recblock_nnz_ptr++;
                 }
             }
+            // printf("\n");
+            // printf("rec real = %d\n", recblock_nnz_ptr);
+            // for (int i = 0; i < blk_nnz[blk_count]; i++)
+            //     printf("%d ", recblock_Index[index_offset[blk_count]+i]);
+            // printf("\n\n");
 
             int i_new = 1;
             int lenmax = csrRowPtr_sqr[1] - csrRowPtr_sqr[0];
@@ -724,6 +819,8 @@ void L_preprocessing(int *cscRowIdxTR_new,
                 }
             }
 
+            // printf("i_new = %d\n", i_new);
+
             int m_new = i_new - 1;
             int nnzr = (blk_nnz[blk_count] - longlen) / m_new;
             double empty_ratio = 100 * (double)(blk_m[blk_count] - m_new) / (double)blk_m[blk_count];
@@ -737,6 +834,7 @@ void L_preprocessing(int *cscRowIdxTR_new,
                 cudaMalloc((void **)&((mv_blk[mv_count]).d_y), m * sizeof(VALUE_TYPE));
                 if (nnzr <= 12 && empty_ratio <= 50)
                 {
+                    printf("mv method = 0\n");
                     int num_threads = WARP_PER_BLOCK * WARP_SIZE;
                     int num_blocks = ceil((double)m / (double)num_threads);
                     (mv_blk[mv_count]).method = 0;
@@ -750,9 +848,14 @@ void L_preprocessing(int *cscRowIdxTR_new,
                         recblock_Ptr[index] = recblock_Ptr[index - 1] + row_nnz;
                     }
                     real_i = blk_m[blk_count];
+                    
+                    // for (int i = 0; i < m+1; i++)
+                    //     printf("%d ", recblock_Ptr[ptr_offset[blk_count]+i-1]);
+                    // printf("\n\n");
                 }
                 else if (nnzr <= 12 && empty_ratio > 50)
                 {
+                    printf("mv method = 1\n");
                     int num_threads = WARP_PER_BLOCK * WARP_SIZE;
                     int num_blocks = ceil((double)m_new / (double)num_threads);
                     (mv_blk[mv_count]).method = 1;
@@ -772,9 +875,11 @@ void L_preprocessing(int *cscRowIdxTR_new,
                         }
                     }
                     real_i = dcsr_i;
+                    // printf("real = %d\n", real_i);
                 }
                 else if (nnzr > 12 && empty_ratio <= 15)
                 {
+                    printf("mv method = 2\n");
                     int num_threads = WARP_PER_BLOCK * WARP_SIZE;
                     int num_blocks = ceil((double)m / (double)(num_threads / WARP_SIZE));
 
@@ -792,6 +897,7 @@ void L_preprocessing(int *cscRowIdxTR_new,
                 }
                 else
                 {
+                    printf("mv method = 3\n");
                     int num_threads = WARP_PER_BLOCK * WARP_SIZE;
                     int num_blocks = ceil((double)m_new / (double)(num_threads / WARP_SIZE));
 
@@ -835,6 +941,14 @@ void L_preprocessing(int *cscRowIdxTR_new,
                 }
             }
 
+            // for (int i = 0; i < blk_nnz[blk_count]; i++)
+            //     printf("%d ", recblock_Index[index_offset[blk_count]+i]);
+            // printf("\n\n");
+
+                // printf("ptr offset = %d\n", ptr_offset[blk_count]);
+                // printf("idx offset = %d\n", index_offset[blk_count]);
+                // printf("dcsr offset = %d\n", dcsrindex_offset[blk_count]);
+            
             ptr_offset[blk_count + 1] = ptr_offset[blk_count] + real_i;
             index_offset[blk_count + 1] = recblock_nnz_ptr;
             dcsrindex_offset[blk_count + 1] = dcsrindex_offset[blk_count] + dcsr_i;
@@ -930,6 +1044,11 @@ void U_preprocessing(int *cscRowIdxTR_new,
             int *levelItem_local = (int *)malloc(blk_m[blk_count] * sizeof(int));
             int *levelPtr_local = (int *)malloc((blk_m[blk_count] + 1) * sizeof(int));
             int fasttrack = blk_m[blk_count] == blk_nnz[blk_count] ? 1 : 0;
+
+            for (int i = 0; i <= blk_n[blk_count]; i++)
+                printf("%d ", cscColPtrTR_sub[i]);
+            printf("\n\n");
+        
             if (fasttrack)
                 nlv = 1;
             else
@@ -963,6 +1082,7 @@ void U_preprocessing(int *cscRowIdxTR_new,
             else
             {
                 int nnzr = blk_nnz[blk_count] / blk_m[blk_count];
+                printf("nnzr = %d       nlv = %d\n", nnzr, nlv);
                 if (nlv > 20000)
                 {
                     int *d_csrRowPtrTR = NULL;
@@ -1332,6 +1452,7 @@ void U_preprocessing(int *cscRowIdxTR_new,
                     cudaMemcpy((mv_blk[mv_count]).d_longrow_idx, longrow_idx, longrow * sizeof(int), cudaMemcpyHostToDevice);
                 }
             }
+
 
             ptr_offset[blk_count + 1] = ptr_offset[blk_count] + real_i;
             index_offset[blk_count + 1] = recblock_nnz_ptr;

@@ -20,6 +20,12 @@ int findlevel(const int *cscColPtr,
     {
         indegree[i] = csrRowPtr[i + 1] - csrRowPtr[i];
     }
+    // for (int i = 0; i < m; i++)
+    //     printf("%d ", indegree[i]);
+    // for (int i = 0; i < m; i++)
+    // printf("%d ", indegree[i]);
+    // printf("\n");
+
 
     // find root items
     int lv = 0;
@@ -36,8 +42,13 @@ int findlevel(const int *cscColPtr,
         }
     }
 
+    // for (int i = 0; i < ptr; i++)
+    // printf("%d ", levelItem[i]);
+    // printf("\n");
+    
     // #items in the 1st level
     levelPtr[1] = ptr;
+    // printf("shoule lvptr = %d\n\n\n", levelPtr[1]);
 
     int lvi = 1;
     while (levelPtr[lvi] != m)
@@ -61,6 +72,10 @@ int findlevel(const int *cscColPtr,
     }
 
     *nlevel = lvi;
+        // printf("lvi = %d\n", lvi);
+    // printf("levelPtr:\n");
+    // for (int i = 0; i < m; i++)
+    //     printf("%d ", levelPtr[i]);
 
     free(indegree);
 

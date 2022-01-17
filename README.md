@@ -7,12 +7,12 @@ Source code of paper ``Efficient Block Algorithms for Parallel Sparse Triangular
 ```
 # Parameters:
 ## Required:
-  * **matrix**: path to the input matrix file stored in Matrix Market Format.   
-  * **datatype**: sptrsv-float(float) or sptrsv-double(double).   
+  * ***matrix***: path to the input matrix file stored in Matrix Market Format.   
+  * ***datatype***: sptrsv-float(float) or sptrsv-double(double).   
 ## Optional:
-  * **-d**: id of the GPU to execute.   
-  * **-rhs**: the number of right-hand-side vectors.   
-  * **-lv**: the level number of recblock-sptrsv algorithm.   
-  * **-forward/-backward**: Lower/Upper triangular matrix.   
-  * **-mtx**: matrix file stored in Matrix Market Format.   
+  * ***-d***: id of the GPU to execute.   
+  * ***-rhs***: the number of right-hand-side vectors.   
+  * ***-lv***: the level number of recblock-sptrsv algorithm.   
+  * ***-forward/-backward***: Lower/Upper triangular matrix.   
+  * ***-mtx***: matrix file stored in Matrix Market Format.   
   

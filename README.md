@@ -24,4 +24,4 @@ make
 ./sptrsv-double -d 1 -rhs 1 -lv -1 -forward -mtx Name.mtx.
 ```
 ## Release version
-Aug 24,2020 Version Alpha
+Oct 19,2021 Version Alpha

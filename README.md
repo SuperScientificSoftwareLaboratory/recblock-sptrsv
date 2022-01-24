@@ -8,7 +8,7 @@ Zhengyang Lu
 E-mail: 2021211259@student.cup.edu.cn
 ## Introduction
 The sparse triangular solve (SpTRSV) operation solves a linear system of the form 𝐿𝑥 = 𝑏 (or 𝑈 𝑥 = 𝑏), where 𝐿 (or 𝑈 ) is a sparse lower (or upper) triangular matrix, 𝑏 is a dense right-hand side vector, and 𝑥 is the dense resulting vector to solve.    
-recblock-sptrsv implement recursive blocks (each including two triangular sub-matrices and a square or near square sub-matrix). And we further improve its performance by using a
+recblock-sptrsv implements recursive blocks (each including two triangular sub-matrices and a square or near square sub-matrix). And we further improve its performance by using a
 new data format. In addition, we propose an adaptive method that automatically selects the best SpTRSV and SpMV kernels for the divided triangular sub-matrices and square sub-matrices, respectively, depending on their sparsity structures
 ## Installation
 NVIDIA GPU with compute capability at least 3.5 (NVIDIA Titan X and Titan RTX as tested) * NVIDIA nvcc CUDA compiler and cuSPARSE library, both of which are included with CUDA Toolkit (CUDA v10.2 as tested) The GPU test programs have been tested on Ubuntu 18.04/20.04, and are expected to run correctly under other Linux distributions.

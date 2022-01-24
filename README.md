@@ -1,6 +1,6 @@
-recblock-sptrsv
+# recblock-sptrsv
 **recblock-sptrsv** implements recursive block algorithms for parallel SpTRSV on modern GPUs, and propose an adaptive approach that can automatically select the best kernels according to input sparsity structures.
-# Paper information
+## Paper information
 Zhengyang Lu, Yuyao Niu, and Weifeng Liu. 2020. Efficient Block Algorithms for Parallel Sparse Triangular Solve. In 49th International Conference on Parallel Processing - ICPP (ICPP '20). Association for Computing Machinery, New York, NY, USA, Article 63, 1–11. DOI:https://doi.org/10.1145/3404397.3404413
 ## Contact us
 Zhengyang Lu    

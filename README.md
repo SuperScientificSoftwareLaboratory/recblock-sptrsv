@@ -4,7 +4,7 @@
 Zhengyang Lu, Yuyao Niu, and Weifeng Liu. 2020. Efficient Block Algorithms for Parallel Sparse Triangular Solve. In 49th International Conference on Parallel Processing - ICPP (ICPP '20). Association for Computing Machinery, New York, NY, USA, Article 63, 1–11. DOI:https://doi.org/10.1145/3404397.3404413
 ## Contact us
 Zhengyang Lu    
-E-mail: 20212112596@student.cup.edu.cn
+E-mail: 2021211259@student.cup.edu.cn
 ## Introduction
 The sparse triangular solve (SpTRSV) operation solves a linear system of the form 𝐿𝑥 = 𝑏 (or 𝑈 𝑥 = 𝑏), where 𝐿 (or 𝑈 ) is a sparse lower (or upper) triangular matrix, 𝑏 is a dense right-hand side vector, and 𝑥 is the dense resulting vector to solve.
 recblock-sptrsv implement recursive blocks (each including two triangular sub-matrices and a square or near square sub-matrix). And we further improve its performance by using a

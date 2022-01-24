@@ -1,6 +1,6 @@
 # recblock-sptrsv
 Source code for the following paper.
-## paper infromation
+## paper information
 Zhengyang Lu, Yuyao Niu, and Weifeng Liu. 2020. Efficient Block Algorithms for Parallel Sparse Triangular Solve. In 49th International Conference on Parallel Processing - ICPP (ICPP '20). Association for Computing Machinery, New York, NY, USA, Article 63, 1–11. DOI:https://doi.org/10.1145/3404397.3404413
 # Usage examples:
 ```

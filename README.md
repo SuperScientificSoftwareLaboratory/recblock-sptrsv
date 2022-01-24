@@ -19,7 +19,7 @@ Our test programs currently support input files encoded using the matrix market 
 ```
 make
 ```
-3. Run SpTRSV code on matrix data with auto-tuning in double precision. The GPU compilation takes four optionals: d=<gpu-device, e.g., 0> parameter that specifies the GPU device to run if multiple GPU devices are available at the same time, rhs=<right-hand-side, e.g, 0> parameter specifies the number of right-hand-side vectors. lv=<level, e.g, 0> parameter specifies the level number of recblock-sptrsv algorithm and <forward/backward> parameter specifies the input matrix is Lower/Upper triangular matrix.
+3. Run SpTRSV code on matrix data with auto-tuning in double precision. The GPU compilation takes four optionals: d=<gpu-device, e.g., 0> parameter that specifies the GPU device to run if multiple GPU devices are available at the same time, rhs=<right-hand-side, e.g, 0> parameter specifies the number of right-hand-side vectors. lv=<level, e.g, 0> parameter specifies the level number of recblock-sptrsv algorithm and <forward/backward> parameter specifies the input matrix is lower/upper triangular matrix.
 ```
 ./sptrsv-double -d 1 -rhs 1 -lv -1 -forward -mtx Name.mtx.
 ```
